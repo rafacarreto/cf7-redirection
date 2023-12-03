@@ -13,6 +13,8 @@ register_deactivation_hook(__FILE__, 'custom_cf7_redirect_deactivate');
 // Acciones cuando se envía el formulario de Contact Form 7
 add_action('wpcf7_mail_sent', 'custom_cf7_redirect');
 
+add_action('wpcf7_before_send_mail', 'custom_before_send_mail');
+
 // Acciones cuando se carga la página de administración
 add_action('admin_menu', 'custom_cf7_redirect_admin_menu');
 
@@ -26,24 +28,36 @@ function custom_cf7_redirect_deactivate()
     // Puedes realizar tareas de desactivación aquí
 }
 
+function custom_before_send_mail($contact_form)
+{
+    // Tu lógica aquí
+    echo "Antes";
+}
+
 function custom_cf7_redirect()
 {
-    // Obtiene la lista de IDs de formularios almacenados
-    $form_ids = get_option('custom_cf7_redirect_form_ids', array());
-
     // Obtén el ID del formulario actual
-    $current_form_id = intval($_POST['_wpcf7']);
+    $current_form_id = isset($_POST['_wpcf7']) ? intval($_POST['_wpcf7']) : 0;
 
-    var_dump($current_form_id);
+    // Verifica si el formulario existe
+    if (function_exists('wpcf7_contact_form') && wpcf7_contact_form($current_form_id)) {
 
-    // Verifica si el formulario actual coincide con algún ID que quieres redirigir
-    if (in_array($current_form_id, $form_ids)) {
-        // URL a la que quieres redirigir después de enviar el formulario
-        $redirect_url = '/inicio';
+        
+        // Obtiene la lista de IDs de formularios almacenados
+        $form_ids = get_option('custom_cf7_redirect_form_ids', array());
 
-        // Redirige al usuario
-        wp_redirect($redirect_url);
-        exit;
+        // Verifica si el formulario actual coincide con algún ID que quieres redirigir
+        if (in_array($current_form_id, $form_ids)) {
+            // URL a la que quieres redirigir después de enviar el formulario
+            $redirect_url = '/';
+
+            // Redirige al usuario
+            wp_redirect($redirect_url);
+            exit;
+        }
+    } else {
+        // Formulario no existe, puedes imprimir un mensaje de error o realizar otras acciones
+        echo '<p>El formulario no existe o no puede ser enviado en esta página.</p>';
     }
 }
 
